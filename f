@@ -1,3 +1,2 @@
 #! /bin/bash
-
-sudo platformio run --target upload
+platformio run --target upload
