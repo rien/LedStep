@@ -1,9 +1,8 @@
-// define FASTLED_ESP8266_RAW_PIN_ORDER
 #include <FastLED.h>
-#include <math.h> 
+#include <math.h>
 
 #define LED_PIN     7
-#define NUM_LEDS    30
+#define NUM_LEDS    90
 #define BRIGHTNESS  100
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
@@ -46,67 +45,37 @@ void setup() {
 
 void loop()
 {
-    double timeElapsed = 0.0;
+    int time = 0;
     while(true){
         clear();
 
-        animate(timeElapsed);	
-
-        safety(140);
-
+        animate(time);
 
         FastLED.show();
         FastLED.delay(10);
-        timeElapsed += 0.10;
+        time += 1;
     }
 }
 
-
-void animate(double time){
-
-    // Move one pixel per second.
-    // AT time 0, we are at - 12
-
-    time *= 1.3;
-
-    double ledStart = time - ((int) (time / (NUM_LEDS + 16))) * (NUM_LEDS + 16);
-
-    interpolateOutrunFromTo(ledStart - 15 , ledStart);
-
-
-
-}
-
-void interpolateOutrunFromTo(double start, double end){
-    for(int i = (int) (start - 1); i < end + 1; i++){
-        interpolateOutrun(i, start, end);
+void animate(int time) {
+    int led = time % NUM_LEDS;
+    for (int i = 0; i < NUM_LEDS; i++) {
+        int a = activation(i, led);
+        setLed(i, a, a/2, 0);
     }
-
 }
 
-// Interpolates black -> red -> blue -> black
-void interpolateOutrun(int ledToApply, double interpolationLeft, double interpolationRight){
-
-    double factor = 1.0 * (ledToApply - interpolationLeft) / (interpolationRight - interpolationLeft);
-
-    // red peaks at 0.33
-    // blue peaks at 0.66
-
-    double redFactor = soften((-fabs(1.1*(0.30 - factor)) + 0.33) * 3.0);
-    double blueFactor = soften((-fabs(1.3*(0.60 - factor)) + 0.33) * 3.0);
-
-
-    int red = redFactor * (double) BRIGHTNESS;
-    int blue = blueFactor *(double) BRIGHTNESS;
-    setLed(ledToApply, red, 0, blue);
-}
-
-inline double soften(double v){
-    if(v < 0){
-        return 0;
+int activation(int current, int main) {
+    int distance;
+    if (current > main) {
+        distance = NUM_LEDS + main - current;
+    } else {
+        distance = main - current;
     }
-    return sqrt(v);
+    int diff = NUM_LEDS - distance;
+    return ((int) (((double) BRIGHTNESS) * sqrt((double) diff)));
 }
+
 
 
 void clear(){
@@ -124,18 +93,3 @@ void setLed(int i, int r, int g, int b){
 
 }
 
-void safety(int brightness){
-
-    leds[0] = CRGB(brightness, 0,0);
-    leds[1] = CRGB(brightness, 0,0);
-    leds[2] = CRGB(brightness, 0,0);
-    leds[3] = CRGB(brightness, 0,0);
-    leds[4] = CRGB(brightness, 0,0);
-
-    leds[25] = CRGB(brightness, 255,255);
-    leds[26] = CRGB(brightness, 255,255);
-    leds[27] = CRGB(brightness, 255,255);
-    leds[28] = CRGB(brightness, 255,255);
-    leds[29] = CRGB(brightness, 255,255);
-
-}
