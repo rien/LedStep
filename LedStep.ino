@@ -6,7 +6,7 @@
 #define BRIGHTNESS  100
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define WAVE_LENGTH 12
+#define WAVE_LENGTH 24
 
 
 CRGB leds[NUM_LEDS];
@@ -47,36 +47,36 @@ void setup() {
 void loop()
 {
     int time = 0;
-    double waves[NUM_LEDS];
+    double activation[NUM_LEDS] = { 0 };
     while(true){
         clear();
 
-        animate(waves, time);
+        animate(activation, time);
 
         FastLED.show();
-        FastLED.delay(50);
+        FastLED.delay(75);
         time += 1;
     }
 }
 
 #define INDEX(i, time) ((i*WAVE_LENGTH + time) % NUM_LEDS)
 
-void animate(double* waves, int time) {
-    if (random(4) == 0) {
-        for (int i = 0; i < WAVE_LENGTH; i++) {
-            waves[INDEX(i, time)] = 1.0;
-        }
-    }
+void animate(double* activation, int time) {
     for (int i = 0; i < NUM_LEDS; i += 1) {
         double ratio = ((double) i) / ((double) NUM_LEDS);
+
         double red = 1.0;
         double green = 1.0 - ratio*ratio;
         double blue = max(0.0, .33 - ratio);
 
-        double a = waves[INDEX(i, time)];
+        double a = activation[i];
+        if ((i + time) % WAVE_LENGTH == 0) {
+            a = 1.0;
+        } else {
+            a *= .8;
+        }
         setLed(i, a*red, a*green, a*blue);
-
-        waves[INDEX(i, time)] *= ((double) random(11)) / 10.0;
+        activation[i] = a;
     }
 }
 
