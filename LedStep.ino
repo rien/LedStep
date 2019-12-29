@@ -51,7 +51,7 @@ void loop()
     while(true){
         clear();
 
-        animate(waves);
+        animate(waves, time);
 
         FastLED.show();
         FastLED.delay(50);
@@ -59,19 +59,24 @@ void loop()
     }
 }
 
-void animate(double* waves) {
+#define INDEX(i, time) ((i*WAVE_LENGTH + time) % NUM_LEDS)
+
+void animate(double* waves, int time) {
     if (random(4) == 0) {
         for (int i = 0; i < WAVE_LENGTH; i++) {
-            waves[i] = 1.0;
+            waves[INDEX(i, time)] = 1.0;
         }
     }
-    for (int i = NUM_LEDS; i >= 0; i--) {
-        setLed(i, 1., 1.0 - (((double) i) / (double) NUM_LEDS), 0.0);
-        if (i + WAVE_LENGTH < NUM_LEDS){
-            waves[i + WAVE_LENGTH] = waves[i] * ((double) random(10)) / 10 ;
-        } else {
-            waves[i] = 0;
-        }
+    for (int i = 0; i < NUM_LEDS; i += 1) {
+        double ratio = ((double) i) / ((double) NUM_LEDS);
+        double red = 1.0;
+        double green = 1.0 - ratio*ratio;
+        double blue = max(0.0, .33 - ratio);
+
+        double a = waves[INDEX(i, time)];
+        setLed(i, a*red, a*green, a*blue);
+
+        waves[INDEX(i, time)] *= ((double) random(11)) / 10.0;
     }
 }
 
@@ -83,9 +88,9 @@ void clear(){
 
 void setLed(int i, double r, double g, double b){
     double brightness = (double) BRIGHTNESS;
-    int ir = (int) r*brightness;
-    int ig = (int) g*brightness;
-    int ib = (int) b*brightness;
+    int ir = (int) (r*brightness);
+    int ig = (int) (g*brightness);
+    int ib = (int) (b*brightness);
     i = NUM_LEDS - 1 - i; // The led is placed in reverse
     if(i < 0 || i >= NUM_LEDS){
         return;
